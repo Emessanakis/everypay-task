@@ -1,0 +1,8 @@
+# Dependencies
+/vendor/
+
+# Environment
+.env
+
+# PHPUnit
+.phpunit.result.cache

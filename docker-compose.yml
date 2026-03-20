@@ -1,0 +1,46 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.app
+    container_name: everypay-app
+    working_dir: /var/www/html
+    volumes:
+      - .:/var/www/html
+    ports:
+      - "8000:8000"
+    command: sh -c "composer install --no-interaction && php -S 0.0.0.0:8000 -t public"
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - .env
+
+  mailpit:
+    image: axllent/mailpit
+    container_name: everypay-mailpit
+    ports:
+      - "8025:8025"
+      - "1025:1025"
+
+  db:
+    image: mysql:8.0
+    container_name: everypay-db
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./database:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  db_data:
